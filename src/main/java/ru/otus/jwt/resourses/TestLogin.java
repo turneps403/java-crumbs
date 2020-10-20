@@ -13,7 +13,7 @@ import java.util.concurrent.ThreadLocalRandom;
 @RequestMapping(path = "/login", produces = MediaType.APPLICATION_JSON_VALUE)
 public class TestLogin {
     @RequestMapping("/lookup")
-    public Map testtest(@RequestParam String login, @RequestParam String password) {
+    public Map testtest(@RequestParam String email, @RequestParam String password) {
         int uid = ThreadLocalRandom.current().nextInt();
         return Collections.singletonMap("user", String.valueOf(uid));
     }

@@ -5,12 +5,15 @@ import com.auth0.jwt.algorithms.Algorithm;
 import com.auth0.jwt.interfaces.DecodedJWT;
 import com.auth0.jwt.interfaces.JWTVerifier;
 import org.springframework.beans.factory.annotation.Value;
+import org.springframework.http.HttpStatus;
 import org.springframework.http.MediaType;
 import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RequestParam;
 import org.springframework.web.bind.annotation.RestController;
 import org.springframework.web.client.RestTemplate;
 import org.springframework.web.util.UriComponentsBuilder;
+import ru.otus.jwt.resourses.exception.MyBadRequestException;
+import ru.otus.jwt.resourses.exception.MyResourceNotFoundException;
 
 import javax.servlet.http.HttpServletRequest;
 import javax.servlet.http.HttpServletResponse;
@@ -75,22 +78,29 @@ public class Jwt {
     @RequestMapping("/login")
     public Map login(
             HttpServletRequest httpRequest, HttpServletResponse httpResponse,
-            @RequestParam String login, @RequestParam String password
-    ) {
+            @RequestParam String email, @RequestParam String password
+    ) throws MyBadRequestException, MyResourceNotFoundException {
         String url = "http://{service}:{port}/login/lookup";
         Map<String, String> urlParams = new HashMap<>();
         urlParams.put("service", LOGIN_SERVICE);
         urlParams.put("port", LOGIN_PORT);
         UriComponentsBuilder urlBuilder = UriComponentsBuilder.fromUriString(url)
-            .queryParam("login", login)
+            .queryParam("email", email)
             .queryParam("password", password);
 
         RestTemplate restTemplate = new RestTemplate();
-        Map result = restTemplate.getForObject(urlBuilder.buildAndExpand(urlParams).toUriString(), Map.class);
-        logger.log(Level.WARNING, "FOOOOOOOO:   " + result.get("user"));
+        Map<String, String> result = restTemplate.getForObject(urlBuilder.buildAndExpand(urlParams).toUriString(), Map.class);
+        logger.log(Level.WARNING, "login result:   " + result.get("user"));
 
-        httpResponse.setHeader("Authorization", "Bearer " + createJWToken(result.get("user").toString()));
-        return Collections.singletonMap("status", "OK");
+        String uid = result.get("user");
+        if ("-1".equals(uid)) {
+            throw new MyBadRequestException("credentials mismatch");
+        } else if ("0".equals(uid)) {
+            throw new MyResourceNotFoundException("user not found");
+        } else {
+            httpResponse.setHeader("Authorization", "Bearer " + createJWToken(uid));
+            return Collections.singletonMap("status", "OK");
+        }
     }
 
     private String createJWToken(String keyValue) {
