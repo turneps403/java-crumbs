@@ -7,7 +7,7 @@ It implemets only two handlers:
 0. `/jwt/auth` to authenticate JWT and if it would be successfully recognized then the value will be set to the header
 1. `/jwt/login` to create JWT after success authentication (expected two arguments: `email` and `password`)
 
-#### DickerHub
+#### DockerHub
 https://hub.docker.com/repository/docker/turneps403/jwt-spring-middleware
 
 #### Useful links
